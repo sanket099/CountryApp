@@ -1,6 +1,8 @@
 package com.country.countries;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -18,6 +20,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -29,6 +32,7 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnNoteLis
     Adapter adapter;
     RecyclerView recyclerView;
     ArrayList<Countries> modelRecyclerArrayList;
+    MyViewModel myViewModel;
     EditText et_search;
 
 
@@ -38,102 +42,45 @@ public class MainActivity extends AppCompatActivity implements Adapter.OnNoteLis
         setContentView(R.layout.activity_main);
 
         et_search = findViewById(R.id.et_search);
+        modelRecyclerArrayList = new ArrayList<>();
         recyclerView = findViewById(R.id.recycler_view);
+        myViewModel = new ViewModelProvider(this).get(MyViewModel.class);
 
-        Json();
-
-
-    }
-
-    private void Json() {
-
-        Call<ResponseBody> call = RetrofitClient.getInstance().getapi().countries();
-        call.enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-
-                try {
-                    assert response.body() != null;
-                    writeRecycler(response.body().string());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-            }
-
-            @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-                Toast.makeText(MainActivity.this, "Error: Try Again", Toast.LENGTH_SHORT).show();
-
-            }
-        });
-
-    }
-
-    private void writeRecycler(String response) {
-
-        try {
-            //getting the whole json object from the response
-          //  JSONObject obj = new JSONObject(response);
-
-            JSONArray dataArray = new JSONArray(response);
+        initRecycler();
 
 
-            modelRecyclerArrayList = new ArrayList<>();
-            //JSONArray dataArray  = obj.getJSONArray("products");
+        myViewModel.loadData().observe(this, new Observer<ArrayList<Countries>>() {
+                    @Override
+                    public void onChanged(ArrayList<Countries> countries) {
+                        if(countries!=null){
+                            modelRecyclerArrayList = countries;
+                            adapter.updateList(modelRecyclerArrayList);
 
-            for (int i = 0; i < dataArray.length(); i++) {
+                        }
+                        //adapter.notifyDataSetChanged();
 
-                Countries modelRecycler = new Countries();
-                JSONObject dataobj = dataArray.getJSONObject(i);
+                    }
+                });
 
-                modelRecycler.setName(dataobj.getString("name"));
-                modelRecycler.setRegion(dataobj.getString("region"));
-                modelRecycler.setCapital(dataobj.getString("capital"));
-                modelRecycler.setFlag(dataobj.getString("flag"));
-
-                modelRecycler.setSubregion(dataobj.getString("subregion"));
-                modelRecycler.setPopulation(dataobj.getLong("population"));
-                modelRecycler.setBorders(dataobj.getJSONArray("borders"));
-
-                modelRecycler.setLanguages(dataobj.getJSONArray("languages"));
-
-                System.out.println("dataobj.getString(\"flag\") = " + dataobj.getJSONArray("languages"));
-
-                //  productCode.add(dataobj.getString("productCode"));
-
-
-
-                modelRecyclerArrayList.add(modelRecycler);
-
-            }
-
-            adapter = new Adapter(this,this,modelRecyclerArrayList,this);
-            recyclerView.setAdapter(adapter);
-            recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext(), LinearLayoutManager.VERTICAL, false));
-
-          /*  if(getIntent().getStringArrayListExtra("array")!=null){
-                etsearch.setVisibility(View.VISIBLE);
-                // filter.setVisibility(View.VISIBLE);
-
-                getfilter();
-            }
-            else {
-                search2();
-            }*/
-
-          search();
-
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-            //"error" + e.getMessage());
-        }
+        search();
 
 
 
 
     }
+
+    private void initRecycler() {
+        adapter = new Adapter(this,this,modelRecyclerArrayList,this);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext(), LinearLayoutManager.VERTICAL, false));
+        recyclerView.setAdapter(adapter);
+
+    }
+
+
+
+
+
+
 
     public void search() {
 

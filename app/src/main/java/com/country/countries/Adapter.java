@@ -22,10 +22,10 @@ import java.util.ArrayList;
 
 public class Adapter extends RecyclerView.Adapter<Adapter.MyViewHolder> {
 
-    private LayoutInflater inflater;
+    private final LayoutInflater inflater;
     private ArrayList<Countries> dataModelArrayList;
-    private OnNoteList onNoteList;
-    private Activity activity;
+    private final OnNoteList onNoteList;
+    private final Activity activity;
 
     public Adapter(Context ctx, Activity act, ArrayList<Countries> dataModelArrayList, OnNoteList onNoteList){
 
@@ -41,9 +41,8 @@ public class Adapter extends RecyclerView.Adapter<Adapter.MyViewHolder> {
     @Override
     public Adapter.MyViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = inflater.inflate(R.layout.row_layout, parent, false);
-        MyViewHolder holder = new MyViewHolder(view,onNoteList);
 
-        return holder;
+        return new MyViewHolder(view,onNoteList);
     }
 
     @Override
@@ -102,6 +101,10 @@ public class Adapter extends RecyclerView.Adapter<Adapter.MyViewHolder> {
     }
     public void filteredlist(ArrayList<Countries> filterlist){
         dataModelArrayList = filterlist;
+        notifyDataSetChanged();
+    }
+    public void updateList(ArrayList<Countries> updateList){
+        dataModelArrayList = updateList;
         notifyDataSetChanged();
     }
 }
